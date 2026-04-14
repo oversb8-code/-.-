@@ -47,7 +47,7 @@ public class JwtTokenProvider {
                 .setIssuedAt(new Date()) // 토큰 발급 시간
                 .setExpiration(new Date(System.currentTimeMillis() + expiration)) // 토큰 만료 시간
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .setClaims(Map.of("role", member.getRole().name())) // 권한 정보
+                .claim("role", member.getRole().name()) // 권한 정보
                 .compact(); // 최종 문자열 생성하기
     }
 

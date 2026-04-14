@@ -37,7 +37,10 @@ public class MemberService {
     public Optional<Member> findMemberById(Long memberId) {
         return this.memberRepository.findById(memberId);
     }
+
+
 }
+
 
 
 

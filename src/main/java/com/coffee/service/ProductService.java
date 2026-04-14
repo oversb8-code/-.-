@@ -1,6 +1,5 @@
 package com.coffee.service;
 
-import com.coffee.entity.Member;
 import com.coffee.entity.Product;
 import com.coffee.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,88 +11,88 @@ import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    /* 상품 목록 가져 오기 */
-    public List<Product> getProductList() {
+    public List<Product> getProductList(){
         return this.productRepository.findProductByOrderByIdDesc();
     }
 
     @Value("${productImageLocation}")
-    private String productImageLocation;
+    private String productImageLocation; // 기본 값 : null
 
-    // 상품 id를 이용한 삭제.
     public boolean deleteProduct(Long id) {
         Product product = productRepository.findById(id).orElse(null);
-        if (product == null) {
+
+        if(product == null){
             return false;
         }
+
         String fileName = product.getImage();
-        if (fileName != null && fileName.isEmpty()) {
-            File file = new File(productImageLocation + "\\" + fileName);
+        if(fileName != null && !fileName.isEmpty()){
+            File file = new File(productImageLocation + fileName);
 
             System.out.println("삭제될 파일 이름");
-            System.out.println(file.getAbsolutePath()); // 절대 경로
+            System.out.println(file.getAbsoluteFile());
 
-            if (file.exists()) {
+            if (file.exists()){
                 boolean deleted = file.delete();
 
-                if (!deleted) {
+                if(!deleted) {
                     System.out.println("이미지 삭제 실패");
                 }
+
             }
         }
         productRepository.deleteById(id);
         return true;
     }
 
-    private String saveProductImage(String base64Image) {
+
+    private String saveProductImage(String base64Image){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String formattedNow = LocalDateTime.now().format(formatter);
-        // UUID class 공부
-        String imageFileName = "product_" + formattedNow + ".jpg";
+        //UUID 클래스 공부
+
+        String imageFileName = "Product_" + formattedNow + ".jpg";
 
         File imageFile = new File(productImageLocation + imageFileName);
         System.out.println("등록할 이미지 이름");
-        System.out.println(imageFile.getAbsolutePath());
+        System.out.println(imageFile.getAbsoluteFile());
 
         byte[] decodedImage = Base64.getDecoder().decode(base64Image.split(",")[1]);
 
-        try {
+        try{
             FileOutputStream fos = new FileOutputStream(imageFile);
-            fos.write(decodedImage); // c:\shop\images 폴더에 복사.
+            fos.write(decodedImage); //c:\shop\images 복사
             return imageFileName;
-
-        } catch (Exception e) {
-            String message = "이미지 파일 저장 중에 오류가 발생했습니다.";
-            throw new IllegalStateException(message);
+        }catch(Exception e) {
+            throw new IllegalStateException("이미지 파일 저장 중 오류가 발생");
         }
-
     }
 
-    public Product insertProduct(Product product) {
-        // product는 리액트에서 넘어온 상품 등록을 위한 정보입니다.
-        if (product.getImage() != null && product.getImage().startsWith("data:image")) {
+    public Product insertProduct(Product product){
+        //product는 리액트에서 넘어온 상품 등록을 위한 정보입니다.
+        if ((product.getImage() != null && product.getImage().startsWith("data:image"))) {
             String imageFileName = this.saveProductImage(product.getImage());
 
-            // 데이터베이스에는 product_년월일시분초.jpg 형식으로 저장되어야 합니다.
+            //데이터베이스에는 product_년월일시분초.jpg 형식으로 저장되어야 합니다
             product.setImage(imageFileName);
 
             product.setInputdate(LocalDate.now());
-            System.out.println("서비스 클래스에서 상품 등록 정보 확인");
+            System.out.println("서비스 크랠스에서 상품 등록 정보 확인");
             System.out.println(product);
 
-            return this.productRepository.save(product); // 데이터베이스에 추가
-        }else {
+            return this.productRepository.save(product); //데이터베이스에 추가하기
+
+        }else{
             return null;
         }
+
     }
 
     public Product getProductById(Long id){
@@ -102,45 +101,41 @@ public class ProductService {
         return product.orElse(null);
     }
 
-    public Optional<Product> findById(Long id) {
+    public Optional<Product> findById(Long id){
         return this.productRepository.findById(id);
     }
     private void deleteOldImage(String oldImageFileName) {
-        if(oldImageFileName == null || oldImageFileName.isBlank()){
-            return;
+        if (oldImageFileName == null || oldImageFileName.isBlank()){
+            return ;
         }
-
         File oldImageFile = new File(productImageLocation + oldImageFileName);
 
         if(oldImageFile.exists()){
             boolean deleted = oldImageFile.delete();
-            if(!deleted){
+            if(!deleted) {
                 System.out.println("기존 이미지 삭제 실패 : " + oldImageFileName);
             }
         }
     }
-    public Product updateProduct(Product savedProduct, Product updatedProduct){
-        savedProduct.setName(updatedProduct.getName()); // 상품 이름을 get으로 가져와서 세팅 set
+    public Product updateProduct(Product savedProduct, Product updatedProduct) {
+        savedProduct.setName(updatedProduct.getName());
+        savedProduct.setPrice(updatedProduct.getPrice());
+        savedProduct.setCategory(updatedProduct.getCategory());
+        savedProduct.setStock(updatedProduct.getStock());
+        savedProduct.setDescription(updatedProduct.getDescription());
 
-            savedProduct.setPrice(updatedProduct.getPrice());
-            savedProduct.setCategory(updatedProduct.getCategory());
-            savedProduct.setStock(updatedProduct.getStock());
-            savedProduct.setDescription(updatedProduct.getDescription());
-
-            if (updatedProduct.getImage() != null && updatedProduct.getImage().startsWith("data:image")) {
-                deleteOldImage(savedProduct.getImage());
-                String imageFileName = saveProductImage(updatedProduct.getImage());
-                savedProduct.setImage(imageFileName);
-            }
-
-            return productRepository.save(savedProduct);
+        if (updatedProduct.getImage() != null && updatedProduct.getImage().startsWith("data:image")) {
+            deleteOldImage(savedProduct.getImage());
+            String imageFileName = saveProductImage(updatedProduct.getImage());
+            savedProduct.setImage(imageFileName);
         }
 
+        return productRepository.save(savedProduct);
+    }
+
     public Optional<Product> findProductById(Long productId) {
-        return this.productRepository.findById(productId);
+        return productRepository.findById(productId);
     }
 
 
 }
-
-

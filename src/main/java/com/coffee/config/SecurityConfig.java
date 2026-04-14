@@ -36,6 +36,7 @@ public class SecurityConfig {
                 "/member/signup",
                 "/member/login",
                 "/product/**"
+
         };
 
         http
@@ -45,7 +46,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(permitUrls).permitAll()
+                        .requestMatchers(permitUrls).permitAll() // 누구나 접근 가능
                         .anyRequest().authenticated()
                 );
 
