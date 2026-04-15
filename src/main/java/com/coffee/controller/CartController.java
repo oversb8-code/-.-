@@ -46,14 +46,15 @@ public class CartController {
 
     private final CartProductService cartProductService;
 
-@PatchMapping("/edit{cartProductId}")
+    @PatchMapping("/edit/{cartProductId}")
     public ResponseEntity<String> editCartProductQuantity(
             @PathVariable Long cartProductId,
-            @RequestParam(required = false) Integer quantity,
-            @RequestParam(required = false) Long cartProductId){
-    System.out.println("카트 상품 아이디 : "+ cartProductId);
-    System.out.println("변경할 갯수 "+ quantity);
-        System.out.println("상품아이디 "+ productId);
+            @RequestParam(required = false) Long productId,
+            @RequestParam(required = false) Integer quantity) {
+
+        System.out.println("카트 상품 아이디 : " + cartProductId);
+        System.out.println("변경할 갯수 : " + quantity);
+        System.out.println("상품..." + productId);
 
     String message = cartProductService.editCartProductQuantity(cartProductId,quantity,productId);
     if(message.startsWith("오류")){
@@ -63,8 +64,15 @@ public class CartController {
     }
 
     }
+    @DeleteMapping("/delete/{cartProductId}")
     public ResponseEntity<String> deleteCartProduct(@PathVariable Long cartProductId){
-    return null;
+        System.out.println("삭제할 카트 상품 아이디 : "+ cartProductId);
+
+        cartProductService.deleteCartProductById(cartProductId);
+
+        String message = "카트 상품 "+ cartProductId + "번이 목록에서 삭제되었습니다.";
+    return ResponseEntity.ok(message); // 성공 .ok  -  실패 .badrequest
+
     }
 
 }

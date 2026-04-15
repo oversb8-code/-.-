@@ -62,7 +62,7 @@ this.cartProductRepository.save(cp);
     }
 
     public void deleteCartProductById(Long cartProductId){
-
+        cartProductRepository.deleteById(cartProductId);
     }
 
 
