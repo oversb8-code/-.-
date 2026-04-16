@@ -14,56 +14,39 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CartProductService {
     private final CartProductRepository cartProductRepository;
+    private final ProductRepository productRepository; // 유지
 
     public void saveCartProduct(CartProduct cp){
-this.cartProductRepository.save(cp);
+        this.cartProductRepository.save(cp);
     }
-    private final ProductRepository productRepository;
 
-    public String editCartProductQuantity(Long cartProductId, Integer quantity, Long productId){
-        //수량 검증
-        if (quantity == null || quantity <1){
+    public String editCartProductQuantity(Long cartProductId, Integer quantity){
+        // 1. 수량 검증
+        if (quantity == null || quantity < 1){
             return "오류 : 장바구니 품목은 최소 1개 이상이어야 합니다.";
         }
 
-
-        // 재고 수량 점검
-       Optional<Product> productOptional =  productRepository.findById(productId);
-        if(productOptional.isEmpty()){
-            return "오류 : 상품 정보를 찾을 수 었습니다.";
-        }
-        int stock = productOptional.get().getStock();
-        if(quantity > stock){
-            return "오류 : 재고 수량이 부족합니다.";
-        }
-
-        //해당 카트 상품 찾기
-        //Optional-isEmpty-get  공부
+        // 2. 해당 카트 상품 찾기 (타입을 CartProduct로 수정)
         Optional<CartProduct> cartProductOptional = cartProductRepository.findById(cartProductId);
-
         if(cartProductOptional.isEmpty()){
             return "오류 : 카트 품목을 찾을 수 없습니다.";
         }
 
-        //수량 변경
         CartProduct cartProduct = cartProductOptional.get();
+
+        // 3. 재고 수량 검증 및 수량 변경
+        int stock = cartProduct.getProduct().getStock();
+        if(quantity > stock){
+            return "오류 : 재고 수량이 부족합니다. (현재 재고: " + stock + ")";
+        }
+
         cartProduct.setQuantity(quantity);
-
-        // 누적 변경시 다음과 같이 코딩
-        // cartProduct.setQuantity(cartProduct.getQuantity()+quantity);
-
-        // 데이터 베이스에 저장
         cartProductRepository.save(cartProduct);
 
-        //성공 메시지 반환
-
-        String message = "카트 상품 아이디 "+ cartProductId + "번이 "+quantity + "개로 수정이 되었습니다.";
-        return message;
+        return "카트 상품 아이디 " + cartProductId + "번이 " + quantity + "개로 수정되었습니다.";
     }
 
     public void deleteCartProductById(Long cartProductId){
         cartProductRepository.deleteById(cartProductId);
     }
-
-
 }
