@@ -57,6 +57,9 @@ public class CartController {
 
     String message = cartProductService.editCartProductQuantity(cartProductId,quantity);
     if(message.startsWith("오류")){
+        System.out.println(this.getClass());
+        // this.getClasas - 해당 클래스의 전체 경로까지.. 이 문장을 누가 출력하는지.
+        System.out.println(message);
         return ResponseEntity.badRequest().body(message);
     }else {
         return ResponseEntity.ok(message);

@@ -7,7 +7,7 @@ import lombok.ToString;
 @Getter @Setter @ToString
 public class OrderProductDto {
 private Long cartProductID;
-private Long productID;
+private Long productId;
 private int quantity;
 
 }

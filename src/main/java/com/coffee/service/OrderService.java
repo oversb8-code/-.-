@@ -1,6 +1,9 @@
 package com.coffee.service;
 
 
+import com.coffee.constant.OrderStatus;
+import com.coffee.constant.Role;
+import com.coffee.dto.OrderDetailDto;
 import com.coffee.dto.OrderDto;
 import com.coffee.dto.OrderProductDto;
 import com.coffee.entity.Member;
@@ -10,6 +13,7 @@ import com.coffee.entity.Product;
 import com.coffee.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,6 +29,7 @@ public class OrderService {
     private final CartProductService cartProductService;
     private final OrderRepository orderRepository;
 
+    @Transactional
     public Order createOrder(OrderDto dto){ //Optional 공부하기
         Optional<Member> optionalMember = memberService.findMemberById(dto.getMemberId());
         if(!optionalMember.isPresent()){ //RuntimeException 실행될때 어쩌구
@@ -40,7 +45,7 @@ public class OrderService {
         List<OrderProduct> orderProductList= new ArrayList<>();
 
         for( OrderProductDto item : dto.getOrderItems()){
-            Long productId = item.getProductID();
+            Long productId = item.getProductId();
             System.out.println("상품 아이디 : "+ productId);
 
             Optional<Product> optionalProduct = productService.findProductById(productId);
@@ -72,5 +77,48 @@ public class OrderService {
         order.setOrderProducts(orderProductList);
 
         return orderRepository.save(order);
+        //트랜잭션, DML 데이터베이스. .
+
+
     }
+    //주문내역조회 : 관리자(모든 내역), 일반(본인 것만)
+    public List<OrderDetailDto> getOrderListByRole(Long memberId, Role role){
+        List<Order> orders ;
+        if(role ==Role.ADMIN){
+            orders = orderRepository.findByOrderStatusOrderByIdDesc(OrderStatus.PENDING);
+        }else{
+            orders = orderRepository.findByMemberIdAndOrderStatusOrderByIdDesc
+                    (memberId, OrderStatus.PENDING);
+        }
+
+        return convertToOrderDetailDtoList(orders);
+    }
+
+    private List<OrderDetailDto> convertToOrderDetailDtoList(List<Order> orders){
+        List<OrderDetailDto> responseDtos = new ArrayList<>();
+
+        for (Order order : orders) {
+            // 주문의 기초 정보 셋팅
+            OrderDetailDto dto = new OrderDetailDto();
+            dto.setOrderId(order.getId());
+            dto.setName(order.getMember().getName()); //
+            dto.setOrderDate(order.getOrderdate());
+            dto.setStatus(order.getOrderStatus().name());
+
+            // `주문 상품` 여러 개에 대한 셋팅
+            List<OrderDetailDto.OrderItem> orderItems = new ArrayList<>();
+            for (OrderProduct op : order.getOrderProducts()) {
+                OrderDetailDto.OrderItem item =
+                        new OrderDetailDto.OrderItem(op.getProduct().getName(), op.getQuantity());
+                orderItems.add(item);
+            }
+
+            dto.setOrderItems(orderItems);
+            responseDtos.add(dto);
+        }
+
+        return responseDtos;
+    }
+
 }
+

@@ -33,8 +33,8 @@ public class Product {
     private Category category;
 
 
-    @Min(value=10, message = "재고 수량은 10개")
-    @Max(value=1000, message = "재고 수량 1000개")
+    @Min(value=10, message = "재고 수량은 10개 이상이어야 합니다.")
+    @Max(value=1000, message = "재고 수량 1000개이하이어야 합니다.")
     @Column(nullable = false)
     private int stock;
 

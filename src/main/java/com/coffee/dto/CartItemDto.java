@@ -15,8 +15,10 @@ public class CartItemDto {
     private String name; // 상품 이름
     private String image; // 이미지
     private int price; // 단가
+    private int stock; // 재고 추가
     private int quantity; // 구매 또는 장바구니에 담을 수량
     private boolean checked = false; // 카트 상품 목록에서 체크 여부
+
 
     public CartItemDto(CartProduct cartProduct) {
         this.cartProductId = cartProduct.getId();
@@ -24,6 +26,7 @@ public class CartItemDto {
         this.name = cartProduct.getProduct().getName();
         this.image = cartProduct.getProduct().getImage();
         this.price = cartProduct.getProduct().getPrice();
+        this.stock = cartProduct.getProduct().getStock(); // 추가
         this.quantity = cartProduct.getQuantity();
     }
 }
