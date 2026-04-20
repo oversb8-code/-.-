@@ -30,50 +30,50 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     @Transactional
-    public Order createOrder(OrderDto dto){ //Optional 공부하기
+    public Order createOrder(OrderDto dto) { //Optional 공부하기
         Optional<Member> optionalMember = memberService.findMemberById(dto.getMemberId());
-        if(!optionalMember.isPresent()){ //RuntimeException 실행될때 어쩌구
+        if (!optionalMember.isPresent()) { //RuntimeException 실행될때 어쩌구
             throw new RuntimeException("회원이 존재하지 않습니다.");
         }
-        Member member= optionalMember.get();
+        Member member = optionalMember.get();
 
         Order order = new Order();
         order.setMember(member);
         order.setOrderdate(LocalDate.now());
         order.setOrderStatus(dto.getStatus());
 
-        List<OrderProduct> orderProductList= new ArrayList<>();
+        List<OrderProduct> orderProductList = new ArrayList<>();
 
-        for( OrderProductDto item : dto.getOrderItems()){
+        for (OrderProductDto item : dto.getOrderItems()) {
             Long productId = item.getProductId();
-            System.out.println("상품 아이디 : "+ productId);
+            System.out.println("상품 아이디 : " + productId);
 
             Optional<Product> optionalProduct = productService.findProductById(productId);
 
-            if(!optionalProduct.isPresent()) {
+            if (!optionalProduct.isPresent()) {
                 throw new RuntimeException("해당 상품이 존재하지 않습니다.");
             }
-              Product product = optionalProduct.get();
+            Product product = optionalProduct.get();
 
-              if(product.getStock()< item.getQuantity()){
-                  throw new RuntimeException("재고 수량이 부족합니다.");
-              }
-                OrderProduct orderProduct = new OrderProduct();
-              orderProduct.setOrder(order);
+            if (product.getStock() < item.getQuantity()) {
+                throw new RuntimeException("재고 수량이 부족합니다.");
+            }
+            OrderProduct orderProduct = new OrderProduct();
+            orderProduct.setOrder(order);
             orderProduct.setProduct(product);
             orderProduct.setQuantity(item.getQuantity());
             orderProductList.add(orderProduct);
 
-            product.setStock(product.getStock()-item.getQuantity());
+            product.setStock(product.getStock() - item.getQuantity());
 
             Long cartProductId = item.getCartProductID();
-            if(cartProductId != null){
+            if (cartProductId != null) {
                 cartProductService.deleteCartProductById(cartProductId);
-            }else {
+            } else {
                 System.out.println("상품 상세 보기 페이지에서 클릭하셨군요.");
             }
 
-            }
+        }
         order.setOrderProducts(orderProductList);
 
         return orderRepository.save(order);
@@ -81,12 +81,13 @@ public class OrderService {
 
 
     }
+
     //주문내역조회 : 관리자(모든 내역), 일반(본인 것만)
-    public List<OrderDetailDto> getOrderListByRole(Long memberId, Role role){
-        List<Order> orders ;
-        if(role ==Role.ADMIN){
+    public List<OrderDetailDto> getOrderListByRole(Long memberId, Role role) {
+        List<Order> orders;
+        if (role == Role.ADMIN) {
             orders = orderRepository.findByOrderStatusOrderByIdDesc(OrderStatus.PENDING);
-        }else{
+        } else {
             orders = orderRepository.findByMemberIdAndOrderStatusOrderByIdDesc
                     (memberId, OrderStatus.PENDING);
         }
@@ -94,7 +95,7 @@ public class OrderService {
         return convertToOrderDetailDtoList(orders);
     }
 
-    private List<OrderDetailDto> convertToOrderDetailDtoList(List<Order> orders){
+    private List<OrderDetailDto> convertToOrderDetailDtoList(List<Order> orders) {
         List<OrderDetailDto> responseDtos = new ArrayList<>();
 
         for (Order order : orders) {
@@ -118,6 +119,42 @@ public class OrderService {
         }
 
         return responseDtos;
+    }
+
+    @Transactional
+    public String updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        final String message = "해당 주문이 존재하지 않습니다. 주문 Id : " + orderId;
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException(message));
+
+        if (order.getOrderStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 상태를 변경할 수 없습니다.");
+        }
+
+        order.setOrderStatus(newStatus);
+
+     return "송장 번호 " + orderId + "의 주문 상태가 " + newStatus + "변경되었습니다." ;
+
+}
+    @Transactional
+    public String cancelOrder(Long orderId){
+        Optional<Order> orderOptional = orderRepository.findById(orderId);
+
+        if(orderOptional.isEmpty()){
+            throw new IllegalArgumentException("해당 주문이 존재하지 않습니다. Id :" + orderId);
+        }
+
+        Order order = orderOptional.get();
+
+        for(OrderProduct op : order.getOrderProducts()){
+            Product product = op.getProduct();
+            int quantity = op.getQuantity();
+
+            product.setStock(product.getStock()+quantity);
+            productService.save(product);
+        }
+        orderRepository.deleteById(orderId);
+        return "주문이 취소 되었습니다." ;
     }
 
 }

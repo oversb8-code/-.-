@@ -216,8 +216,17 @@ public class ProductService {
     }
 
 
+    public List<Product> getProductsByFilter(String filter) {
+        if (filter != null && !filter.isEmpty()) {
+            return productRepository
+                    .findByImageContaining(filter);
+        }
+            return productRepository.findAll();
+        }
+    }
 
 
 
 
-}
+
+

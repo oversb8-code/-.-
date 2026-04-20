@@ -155,14 +155,19 @@ public class ProductController {
     }
 //getMapping 자꾸 오류나서 새로 복사함.
     @GetMapping("/detail/{id}") // 프론트 엔드가 상품에 대한 상세 정보를 요청하였습니다.
-    public ResponseEntity<Product> detail(@PathVariable Long id){
-        Product product = this.productService.getProductById(id) ;
+    public ResponseEntity<Product> detail(@PathVariable Long id) {
+        Product product = this.productService.getProductById(id);
 
-        if(product == null){ // 404 응답
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build() ;
+        if (product == null) { // 404 응답
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
-        }else{ // 200 ok 응답
-            return ResponseEntity.ok(product) ;
+        } else { // 200 ok 응답
+            return ResponseEntity.ok(product);
         }
+    }
+        @GetMapping("")
+        public List<Product> getBigsizeProducts(@RequestParam(required = false) String filter){
+            return productService.getProductsByFilter(filter);
+
     }
 }

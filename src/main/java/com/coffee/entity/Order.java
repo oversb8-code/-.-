@@ -18,18 +18,16 @@ public class Order {
     @Column(name = "order_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // 한 사람(MEMBER)이 여러 주문(ORDER) 가능하다.
-    @JoinColumn(name = "member_id") // PK와 FK 연결
-    private Member member;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member ;
 
+    // 통상적으로 우리가 주문을 할 때 여러 개의 '주문 상품'을 동시에 주문합니다.
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderProduct> orderProducts ;
 
-    //통상적으로 우리가 주문을 할 때, 여러 개의 '주문 상품'을 동시에 주문합니다.
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<OrderProduct> orderProducts;
-
-
-    private LocalDate orderdate;
+    private LocalDate orderdate ;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
+    private OrderStatus orderStatus ;
 }
