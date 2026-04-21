@@ -5,6 +5,10 @@ import com.coffee.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -23,12 +27,12 @@ public class ProductController {
     @Autowired
     private ProductService productService ;
 
-    @GetMapping("/list") // 상품 목록을 List 컬렉션으로 반환해 줍니다.
-    public List<Product> list(){
-        List<Product> products = this.productService.getProductList() ;
-
-        return products ;
-    }
+//    @GetMapping("/list") // 상품 목록을 List 컬렉션으로 반환해 줍니다.
+//    public List<Product> list(){
+//        List<Product> products = this.productService.getProductList() ;
+//
+//        return products ;
+//    }
 
     // 클라이언트가 특정 상품 id에 대하여 "삭제" 요청을 하였습니다.
     // @PathVariable는 URL의 경로 변수를 메소드의 매개 변수로 값을 전달해 줍니다.
@@ -170,4 +174,25 @@ public class ProductController {
             return productService.getProductsByFilter(filter);
 
     }
+
+        @GetMapping("/list") // GetMapping("/list") 원래 있던 거 주석박고 새로 함
+         public ResponseEntity<Page<Product>> listProducts(
+            @RequestParam(defaultValue = "0")int pageNumber,
+            @RequestParam(defaultValue = "6")int pageSize
+        ){
+            System.out.println("pageNumber : "+ pageNumber + ", pageSize : "+ pageSize);
+            // 디버깅용 sout
+
+            Sort mysort = Sort.by(Sort.Direction.DESC, "id");
+            //정렬하기
+
+            Pageable pageable = PageRequest.of(pageNumber,pageSize, mysort);
+
+            Page<Product> productPage =  productService.listProducts(pageable);
+
+            System.out.println(productPage.getContent()); // spring boot 교안 119페이지
+
+            return ResponseEntity.ok(productPage);
+    }
+
 }

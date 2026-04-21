@@ -12,3 +12,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 
 }
+// 특정한 데이터만 들어올 수 있도록 하는 <> 제너릭 기법.
